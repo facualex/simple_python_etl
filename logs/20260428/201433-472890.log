@@ -1,9 +1,0 @@
-[2026-04-28 20:14:33,473] [INFO] [extract:get_latest_data_url:65] - Checking for available data (2026-4): https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2026-04.parquet
-[2026-04-28 20:14:34,031] [WARNING] [extract:get_latest_data_url:84] - No data found for 2026-4
-[2026-04-28 20:14:34,033] [INFO] [extract:get_latest_data_url:65] - Checking for available data (2026-3): https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2026-03.parquet
-[2026-04-28 20:14:34,066] [INFO] [extract:get_latest_data_url:81] - Data found for 2026-3: https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2026-03.parquet
-[2026-04-28 20:14:34,067] [INFO] [extract:extract:138] - Downloading https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2026-03.parquet...
-[2026-04-28 20:14:35,287] [INFO] [extract:extract:176] - Filed saved: data/raw/yellow_tripdata_2026-03.parquet (67.9 MB)
-[2026-04-28 20:14:35,288] [INFO] [transform:transform:69] - Transforming data: data/raw/yellow_tripdata_2026-03.parquet...
-[2026-04-28 20:14:39,030] [INFO] [transform:transform:79] - Data succesfully transformed: data/raw/yellow_tripdata_2026-03.parquet
-[2026-04-28 20:14:39,100] [INFO] [load:load:14] - Loading transformed data...
