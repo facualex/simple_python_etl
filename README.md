@@ -1,22 +1,36 @@
-## Simple Python ETL (NYC Yellow Taxi)
+## Simple Python ETL — NYC Yellow Taxi
 
-A small, production-leaning **Python ETL pipeline** that:
-- **Extracts** the most recent available NYC Yellow Taxi *monthly* Parquet file from a configurable endpoint
-- **Transforms** it with **Pandas** (data cleaning + feature engineering)
-- **Loads** a **compressed Parquet** output into a local “processed” zone
-- **Logs** every run to both console and timestamped files for auditing
+A **production-leaning Python ETL pipeline** built as a portfolio project for Data Engineering roles. It extracts the most recent NYC Yellow Taxi monthly dataset, validates and transforms it, and persists a cleaned, feature-enriched output locally — with schema validation at every boundary, structured logging per execution, and clear separation across pipeline stages.
 
-This project is intentionally lightweight (no external services) but showcases core **Data Engineering** practices: **configuration**, **idempotent runs**, **data lineage through filenames**, **bounded retries**, and **operational logging**.
+The focus is not on scale, but on the practices that matter in real DE work: schema contracts, data quality enforcement, fault tolerance, operational observability, and traceable artifacts.
 
 ---
 
-## What this demonstrates (Data Engineering focus)
+## What this demonstrates
 
-- **Robust extraction**: resolves “latest available month” safely (handles the common upstream lag where the current month is not published yet)
-- **Separation of concerns**: clear module boundaries for `extract` / `transform` / `load`
-- **Reproducible artifacts**: deterministic output naming that keeps a trace to the exact source file used
-- **Operational readiness**: log files per execution, with a predictable folder structure (`logs/YYYYMMDD/`)
-- **Efficient I/O**: streaming download avoids loading large files into memory
+### Schema-first data validation
+Two Pandera schemas (`RAW_SCHEMA`, `PROCESSED_SCHEMA`) enforce contracts at the two critical boundaries: after ingestion and after feature engineering. Both apply before the next stage runs, so failures surface at their origin rather than propagating silently downstream. Bounded error summaries prevent megabyte-scale stack traces when validation fails on large datasets.
+
+### Robust extraction with bounded retries
+The NYC TLC dataset is published with an upstream lag — the current month is often not yet available. `get_latest_data_url()` resolves this by probing months backwards via HTTP `HEAD` (no download cost) until it finds a `200 OK`, bounded by a configurable threshold. Runs are deterministic and require no manual date updates.
+
+### Streaming I/O
+The download uses `requests.get(..., stream=True)` with chunked writes, keeping memory usage flat regardless of file size. Processed output is written as gzip-compressed Parquet for efficient storage.
+
+### Data quality enforcement
+Three explicit cleaning steps reject rows that would corrupt downstream metrics: non-positive passenger counts, zero/negative trip distances, and trips where dropoff precedes pickup. Each is an isolated, testable function.
+
+### Separation of concerns
+`extract`, `transform`, and `load` are independent modules with narrow responsibilities. `pipeline.py` is the only place that knows the full sequence — each step can be tested, replaced, or extended without touching the others.
+
+### Traceable artifact lineage
+`transform()` returns `(df, raw_path)` and `load()` derives the output filename from `raw_path.name`, producing names like `prcsd_yellow_tripdata_2026-03.parquet.gzip`. Every processed file can be traced back to its exact source without a metadata store.
+
+### Operational logging
+Every run writes to both console and a timestamped file under `logs/YYYYMMDD/`, with microsecond precision in the filename to avoid collisions. Log level is configurable via environment variable. Structured format includes module, function, and line number for fast debugging.
+
+### Configuration-driven design
+The extraction endpoint is driven by `BASE_URL` in a `.env` file. The pipeline fails fast with a clear error when configuration is missing — no silent defaults that cause confusing behavior in production.
 
 ---
 
@@ -28,53 +42,39 @@ This project is intentionally lightweight (no external services) but showcases c
             v
   src/pipeline.py (orchestration)
       |     |      |
-      |     |      +--> src/logging_config.py  -> logs/YYYYMMDD/HHMMSS-ffffff.log
+      |     |      +--> src/logging_config.py  --> logs/YYYYMMDD/HHMMSS-ffffff.log
       |     |
-      |     +--> src/extract.py  -> data/raw/yellow_tripdata_YYYY-MM.parquet
+      |     +--> src/extract.py
+      |               HEAD probe (bounded retry) --> remote endpoint
+      |               streaming download         --> data/raw/yellow_tripdata_YYYY-MM.parquet
       |
-      +--> src/transform.py -> (df, raw_path)
-                 |
-                 v
-           src/load.py -> data/processed/prcsd_<raw_filename>.gzip
+      +--> src/transform.py
+      |         RAW_SCHEMA validation
+      |         cleaning (passengers, distances, durations)
+      |         RAW_SCHEMA re-validation (post-clean)
+      |         feature engineering (duration, time features, payment labels)
+      |         PROCESSED_SCHEMA validation
+      |         |
+      |         v
+      +--> src/load.py --> data/processed/prcsd_<raw_filename>.gzip
 ```
-
----
-
-## Key design decisions
-
-### Latest-month resolution (bounded probe window)
-- **Why**: upstream sources often publish monthly files with delay; hardcoding “current month” makes runs flaky.
-- **How**: `src/extract.py:get_latest_data_url()` probes from current month backward using HTTP `HEAD` until it finds `200 OK`, bounded by `max_backwards_threshold=6`.
-- **Benefit**: repeatable runs without manual month updates, with deterministic failure if availability/naming assumptions change.
-
-### Configuration-driven URL construction
-- **Why**: extraction endpoints vary by environment; code changes should not be required.
-- **How**: `src/extract.py:build_url()` reads `BASE_URL` (via `python-dotenv`) and constructs the remote filename pattern.
-- **Benefit**: fails fast with a clear error when configuration is missing.
-
-### Streaming download to disk
-- **Why**: Parquet files can be large; downloading into memory is unnecessary.
-- **How**: `requests.get(..., stream=True)` + chunked writes.
-- **Benefit**: stable memory usage during extraction.
-
-### Traceable outputs via filename lineage
-- **Why**: in data pipelines, outputs must be attributable to a specific input.
-- **How**: `src/transform.py:transform()` returns `(df, raw_path)`; `src/load.py:load()` derives the processed filename from `raw_path.name`.
-- **Benefit**: artifact lineage without needing a metadata store for this scope.
 
 ---
 
 ## Tech stack
 
-- **Python**: tested locally with Python 3.13
-- **Pandas**: transformations and Parquet I/O
-- **PyArrow**: Parquet engine
-- **Requests**: HTTP probing + streaming download
-- **python-dateutil**: month arithmetic for backward probing
-- **python-dotenv**: environment-based configuration
-- **pytest**: test runner dependency (tests folder exists; currently no discovered test modules)
+| Library | Role |
+|---|---|
+| **Python 3.13** | Runtime |
+| **Pandas** | Transformations and Parquet I/O |
+| **Pandera** | Schema validation at ingestion and post-transform boundaries |
+| **PyArrow** | Parquet engine |
+| **Requests** | HTTP probing + streaming download |
+| **python-dateutil** | Month arithmetic for backward probing |
+| **python-dotenv** | Environment-based configuration |
+| **pytest** | Test runner |
 
-Exact pinned versions live in `requirements.txt`.
+Exact pinned versions in `requirements.txt`.
 
 ---
 
@@ -84,28 +84,25 @@ Exact pinned versions live in `requirements.txt`.
 simple_python_etl/
 ├── data/
 │   ├── raw/                  # Downloaded Parquet source files
-│   └── processed/            # Processed Parquet outputs (gzip-compressed)
-├── logs/
-│   └── YYYYMMDD/             # One folder per day; one file per execution
+│   └── processed/            # Cleaned + enriched Parquet outputs (gzip)
 ├── src/
-│   ├── extract.py            # URL construction, latest-month resolution, streaming download
-│   ├── transform.py          # Cleaning + feature engineering with Pandas
+│   ├── pipeline.py           # Orchestration entrypoint (extract → transform → load)
+│   ├── extract.py            # URL resolution, bounded retry, streaming download
+│   ├── transform.py          # Data cleaning + feature engineering
 │   ├── load.py               # Write transformed dataframe to processed zone
-│   ├── logging_config.py     # Console + file logging setup
-│   └── pipeline.py           # ETL orchestration entrypoint
-├── requirements.txt          # Pinned dependencies
-├── .env.example              # BASE_URL and LOG_LEVEL example
-└── .state.json               # Present in repo; not referenced by runtime code
+│   ├── schemas.py            # Pandera schemas for raw and processed data
+│   ├── utils.py              # Schema error summarization utilities
+│   └── logging_config.py     # Console + file logging setup
+├── requirements.txt
+├── .env.example
+└── .gitignore
 ```
 
 ---
 
 ## Quickstart
 
-### Prerequisites
-- Python 3.13+
-
-### Install
+**Prerequisites:** Python 3.13+
 
 ```bash
 python3 -m venv .venv
@@ -113,34 +110,23 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### Configure
-
 ```bash
 cp .env.example .env
+# Set BASE_URL in .env:
+# BASE_URL=https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata
 ```
 
-Minimal `.env` example:
-
 ```bash
-BASE_URL=https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata
-LOG_LEVEL=INFO
-```
-
-### Run (automatic latest available month)
-
-```bash
-source .venv/bin/activate
 python src/pipeline.py
 ```
 
+The pipeline auto-resolves the latest available month. No manual date updates needed.
+
 ---
 
-## Run for a specific year/month (programmatic)
-
-There is no CLI argument parser yet; you can run a specific month by calling `extract(year=..., month=...)` directly:
+## Run a specific month (programmatic)
 
 ```bash
-source .venv/bin/activate
 python - <<'PY'
 from dotenv import load_dotenv
 from extract import extract
@@ -152,8 +138,7 @@ load_dotenv()
 configure_logging()
 
 raw_path = extract(year=2026, month=3)
-transformed = transform(raw_path)
-load(transformed)
+load(transform(raw_path))
 PY
 ```
 
@@ -161,51 +146,35 @@ PY
 
 ## Outputs
 
-### Generated files
+| Artifact | Location | Example |
+|---|---|---|
+| Raw dataset | `data/raw/` | `yellow_tripdata_2026-03.parquet` |
+| Processed dataset | `data/processed/` | `prcsd_yellow_tripdata_2026-03.parquet.gzip` |
+| Execution log | `logs/YYYYMMDD/` | `143022-482910.log` |
 
-1. **Raw dataset (Parquet)**
-   - **Location**: `data/raw/`
-   - **Produced by**: `src/extract.py:extract()`
-   - **Example**: `data/raw/yellow_tripdata_2026-03.parquet`
+**Engineered features added during transform:**
 
-2. **Processed dataset (gzip-compressed Parquet)**
-   - **Location**: `data/processed/`
-   - **Produced by**: `src/load.py:load()`
-   - **Naming**: `prcsd_<raw_filename>.gzip`
-   - **Example**: `data/processed/prcsd_yellow_tripdata_2026-03.parquet.gzip`
-   - **Includes engineered features such as**:
-     - `trip_duration_minutes`
-     - `hour_of_day`
-     - `day_of_week`
-     - `payment_type` (mapped from numeric codes to labels)
-
-3. **Execution logs**
-   - **Location**: `logs/YYYYMMDD/`
-   - **Produced by**: `src/logging_config.py:configure_logging()`
-   - **Naming**: `HHMMSS-ffffff.log` (microsecond precision to avoid collisions)
-
-### Summary report
-
-No JSON run summary is generated at the moment; execution outcomes are captured in the log files under `logs/`.
+| Column | Description |
+|---|---|
+| `trip_duration_minutes` | Dropoff − pickup time in minutes |
+| `hour_of_day` | Pickup hour (0–23) |
+| `day_of_week` | Pickup weekday name (e.g. `Monday`) |
+| `payment_type` | Human-readable label mapped from numeric code |
 
 ---
 
 ## Testing
 
 ```bash
-source .venv/bin/activate
 pytest
 ```
 
-Note: `tests/` exists, but currently no test modules are discovered by pytest.
-
 ---
 
-## Roadmap (next improvements)
+## Roadmap
 
-- Add a small CLI (`--year`, `--month`, `--latest`) and exit codes for operational use
-- Introduce data quality checks (schema validation + expectations-style rules)
-- Add a run summary artifact (JSON) with row counts, null counts, and input/output paths
-- Partition processed outputs (e.g., by pickup date) and/or write to a local warehouse format
-- Add unit tests for URL building, latest-month probing, and transform logic
-
+- Add a CLI (`--year`, `--month`, `--latest`) with proper exit codes for operational use
+- Write a `run_summary.json` per execution (row counts, dropped rows by reason, input/output paths, git SHA)
+- Add unit tests for URL resolution, transform logic, and schema validation paths
+- Skip extraction and processing if the output already exists for the target month
+- Schedule via cron and add run alerting on failure

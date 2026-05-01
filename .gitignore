@@ -2,3 +2,5 @@
 .state.json
 .venv
 logs/
+.DS_Store
+*/__pycache__/
