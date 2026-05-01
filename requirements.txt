@@ -1,0 +1,12 @@
+# configuration
+python-dotenv==1.2.2
+
+# pipeline
+pandas==2.2.3
+pyarrow==19.0.1
+requests==2.32.3
+python-dateutil==2.9.0.post0
+pandera==0.31.1
+
+# testing
+pytest==9.0.3

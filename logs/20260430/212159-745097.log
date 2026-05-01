@@ -1,0 +1,32 @@
+[2026-04-30 21:21:59,745] [INFO] [extract:get_latest_data_url:65] - Checking for available data (2026-4): https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2026-04.parquet
+[2026-04-30 21:22:00,319] [WARNING] [extract:get_latest_data_url:84] - No data found for 2026-4
+[2026-04-30 21:22:00,320] [INFO] [extract:get_latest_data_url:65] - Checking for available data (2026-3): https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2026-03.parquet
+[2026-04-30 21:22:00,355] [INFO] [extract:get_latest_data_url:81] - Data found for 2026-3: https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2026-03.parquet
+[2026-04-30 21:22:00,355] [INFO] [extract:extract:138] - Downloading https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2026-03.parquet...
+[2026-04-30 21:22:01,480] [INFO] [extract:extract:176] - Filed saved: data/raw/yellow_tripdata_2026-03.parquet (67.9 MB)
+[2026-04-30 21:22:01,480] [INFO] [transform:transform:131] - Transforming data: data/raw/yellow_tripdata_2026-03.parquet...
+[2026-04-30 21:22:08,021] [ERROR] [transform:transform:158] - Schema validation failed on processed dataframe.
+Column 'trip_duration_minutes' failed validation.
+Failing rows: 12053
+Invalid value counts (top 10):
+failure_case
+0.083333    922
+0.100000    844
+0.066667    664
+0.116667    577
+0.133333    465
+0.166667    384
+0.150000    380
+0.183333    283
+0.200000    261
+0.050000    241
+Sample:
+   index  failure_case
+0    101      0.716667
+1    204      0.450000
+2    962      0.916667
+3   1008      0.550000
+4   1453      0.966667
+5   1978      0.250000
+6   1979      0.250000
+7   3024      0.050000

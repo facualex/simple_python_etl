@@ -1,0 +1,29 @@
+[2026-04-30 21:17:04,129] [INFO] [extract:get_latest_data_url:65] - Checking for available data (2026-4): https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2026-04.parquet
+[2026-04-30 21:17:04,618] [WARNING] [extract:get_latest_data_url:84] - No data found for 2026-4
+[2026-04-30 21:17:04,619] [INFO] [extract:get_latest_data_url:65] - Checking for available data (2026-3): https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2026-03.parquet
+[2026-04-30 21:17:04,652] [INFO] [extract:get_latest_data_url:81] - Data found for 2026-3: https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2026-03.parquet
+[2026-04-30 21:17:04,653] [INFO] [extract:extract:138] - Downloading https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2026-03.parquet...
+[2026-04-30 21:17:05,841] [INFO] [extract:extract:176] - Filed saved: data/raw/yellow_tripdata_2026-03.parquet (67.9 MB)
+[2026-04-30 21:17:05,842] [INFO] [transform:transform:131] - Transforming data: data/raw/yellow_tripdata_2026-03.parquet...
+[2026-04-30 21:17:12,640] [ERROR] [transform:transform:155] - Schema validation failed on processed dataframe.
+Column 'day_of_week' failed validation.
+Failing rows: 2911018
+Invalid value counts (top 10):
+failure_case
+Tuesday      482359
+Thursday     431264
+Monday       422369
+Wednesday    405884
+Friday       398695
+Sunday       390675
+Saturday     379772
+Sample:
+   index failure_case
+0      0       Sunday
+1      1       Sunday
+2      2       Sunday
+3      3       Sunday
+4      4       Sunday
+5      5       Sunday
+6      6     Saturday
+7      7       Sunday

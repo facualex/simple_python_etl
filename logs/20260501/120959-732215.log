@@ -1,0 +1,17 @@
+[2026-05-01 12:09:59,734] [INFO] [extract:get_latest_data_url:65] - Checking for available data (2026-5): https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2026-05.parquet
+[2026-05-01 12:10:00,281] [WARNING] [extract:get_latest_data_url:84] - No data found for 2026-5
+[2026-05-01 12:10:00,284] [INFO] [extract:get_latest_data_url:65] - Checking for available data (2026-4): https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2026-04.parquet
+[2026-05-01 12:10:00,794] [WARNING] [extract:get_latest_data_url:84] - No data found for 2026-4
+[2026-05-01 12:10:00,795] [INFO] [extract:get_latest_data_url:65] - Checking for available data (2026-3): https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2026-03.parquet
+[2026-05-01 12:10:00,846] [INFO] [extract:get_latest_data_url:81] - Data found for 2026-3: https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2026-03.parquet
+[2026-05-01 12:10:00,847] [INFO] [extract:extract:138] - Downloading https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2026-03.parquet...
+[2026-05-01 12:10:08,785] [INFO] [extract:extract:176] - Filed saved: data/raw/yellow_tripdata_2026-03.parquet (67.9 MB)
+[2026-05-01 12:10:08,786] [INFO] [transform:transform:90] - Transforming data: data/raw/yellow_tripdata_2026-03.parquet...
+[2026-05-01 12:10:09,959] [INFO] [transform:transform:94] - Schema validation succesful after reading parquet.
+[2026-05-01 12:10:09,959] [INFO] [transform:transform:95] - Data succesfully read.
+[2026-05-01 12:10:11,461] [INFO] [transform:transform:103] - Schema validation succesful after cleaning.
+[2026-05-01 12:10:11,461] [INFO] [transform:transform:104] - Data succesfully cleaned.
+[2026-05-01 12:10:15,221] [INFO] [transform:transform:121] - Data succesfully transformed: data/raw/yellow_tripdata_2026-03.parquet
+[2026-05-01 12:10:15,221] [INFO] [load:load:32] - Loading transformed data...
+[2026-05-01 12:10:25,703] [INFO] [load:load:52] - File saved: data/processed/prcsd_yellow_tripdata_2026-03.parquet.gzip (59.5 MB)
+[2026-05-01 12:10:25,704] [INFO] [__main__:<module>:31] - Pipeline completed

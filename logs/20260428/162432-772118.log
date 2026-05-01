@@ -1,0 +1,9 @@
+[2026-04-28 16:24:32,772] [INFO] [extract:get_latest_data_url:55] - Checking for available data (2026-4): https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2026-04.parquet
+[2026-04-28 16:24:33,324] [WARNING] [extract:get_latest_data_url:63] - No data found for 2026-4
+[2026-04-28 16:24:33,326] [INFO] [extract:get_latest_data_url:55] - Checking for available data (2026-3): https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2026-03.parquet
+[2026-04-28 16:24:33,357] [INFO] [extract:get_latest_data_url:60] - Data found for 2026-3: https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2026-03.parquet
+[2026-04-28 16:24:33,358] [INFO] [extract:extract:81] - Downloading https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2026-03.parquet...
+[2026-04-28 16:24:34,417] [INFO] [extract:extract:101] - Filed saved: data/raw/yellow_tripdata_2026-03.parquet (67.9 MB)
+[2026-04-28 16:24:34,417] [INFO] [transform:transform:7] - Transforming data...
+[2026-04-28 16:24:34,417] [INFO] [load:load:7] - Loading data...
+[2026-04-28 16:24:34,417] [INFO] [__main__:<module>:24] - ✅ Pipeline completed

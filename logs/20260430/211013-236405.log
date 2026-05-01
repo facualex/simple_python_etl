@@ -1,0 +1,11 @@
+[2026-04-30 21:10:13,236] [INFO] [extract:get_latest_data_url:65] - Checking for available data (2026-4): https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2026-04.parquet
+[2026-04-30 21:10:13,793] [WARNING] [extract:get_latest_data_url:84] - No data found for 2026-4
+[2026-04-30 21:10:13,794] [INFO] [extract:get_latest_data_url:65] - Checking for available data (2026-3): https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2026-03.parquet
+[2026-04-30 21:10:13,825] [INFO] [extract:get_latest_data_url:81] - Data found for 2026-3: https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2026-03.parquet
+[2026-04-30 21:10:13,826] [INFO] [extract:extract:138] - Downloading https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2026-03.parquet...
+[2026-04-30 21:10:14,939] [INFO] [extract:extract:176] - Filed saved: data/raw/yellow_tripdata_2026-03.parquet (67.9 MB)
+[2026-04-30 21:10:14,940] [INFO] [transform:transform:90] - Transforming data: data/raw/yellow_tripdata_2026-03.parquet...
+[2026-04-30 21:10:21,215] [INFO] [transform:transform:114] - Data succesfully transformed: data/raw/yellow_tripdata_2026-03.parquet
+[2026-04-30 21:10:21,216] [INFO] [load:load:32] - Loading transformed data...
+[2026-04-30 21:10:31,981] [INFO] [load:load:52] - File saved: data/processed/prcsd_yellow_tripdata_2026-03.parquet.gzip (59.5 MB)
+[2026-04-30 21:10:31,981] [INFO] [__main__:<module>:31] - ✅ Pipeline completed

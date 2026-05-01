@@ -1,0 +1,45 @@
+[2026-04-30 21:27:31,758] [INFO] [extract:get_latest_data_url:65] - Checking for available data (2026-4): https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2026-04.parquet
+[2026-04-30 21:27:32,468] [WARNING] [extract:get_latest_data_url:84] - No data found for 2026-4
+[2026-04-30 21:27:32,469] [INFO] [extract:get_latest_data_url:65] - Checking for available data (2026-3): https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2026-03.parquet
+[2026-04-30 21:27:32,500] [INFO] [extract:get_latest_data_url:81] - Data found for 2026-3: https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2026-03.parquet
+[2026-04-30 21:27:32,501] [INFO] [extract:extract:138] - Downloading https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2026-03.parquet...
+[2026-04-30 21:27:33,703] [INFO] [extract:extract:176] - Filed saved: data/raw/yellow_tripdata_2026-03.parquet (67.9 MB)
+[2026-04-30 21:27:33,703] [INFO] [transform:transform:209] - Transforming data: data/raw/yellow_tripdata_2026-03.parquet...
+[2026-04-30 21:27:41,459] [ERROR] [transform:transform:236] - Schema validation failed on processed dataframe.
+Pandera reported 2 schema error(s).
+error_counts: defaultdict(<class 'int'>, {'DATAFRAME_CHECK': 2})
+failure_cases rows (total): 434611
+Columns with errors (2): day_of_week, trip_duration_minutes
+--- 'day_of_week': 422369 row(s) in failure_cases
+    checks: isin(['Jeje', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])
+    invalid value counts (top 8):
+    failure_case
+    Monday    422369
+    sample:
+           schema_context       column                                                                               check  check_number failure_case    index
+    289749         Column  day_of_week  isin(['Jeje', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])             0       Monday  2184897
+    289747         Column  day_of_week  isin(['Jeje', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])             0       Monday  2184895
+    289746         Column  day_of_week  isin(['Jeje', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])             0       Monday  2184894
+    289745         Column  day_of_week  isin(['Jeje', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])             0       Monday  2184893
+    289744         Column  day_of_week  isin(['Jeje', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])             0       Monday  2184892
+    289743         Column  day_of_week  isin(['Jeje', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'])             0       Monday  2184891
+--- 'trip_duration_minutes': 12242 row(s) in failure_cases
+    checks: greater_than(1)
+    invalid value counts (top 8):
+    failure_case
+    0.083333    922
+    0.1         844
+    0.066667    664
+    0.116667    577
+    0.133333    465
+    0.166667    384
+    0.15        380
+    0.183333    283
+    sample:
+         schema_context                 column            check  check_number failure_case    index
+    0            Column  trip_duration_minutes  greater_than(1)             0     0.716667      101
+    1            Column  trip_duration_minutes  greater_than(1)             0         0.45      204
+    4535         Column  trip_duration_minutes  greater_than(1)             0          0.2  1138427
+    4533         Column  trip_duration_minutes  greater_than(1)             0     0.633333  1137723
+    4532         Column  trip_duration_minutes  greater_than(1)             0     0.083333  1137666
+    4531         Column  trip_duration_minutes  greater_than(1)             0     0.083333  1137665
