@@ -18,14 +18,14 @@ from run_context import RunContext
 from transform import transform
 
 load_dotenv()
-configure_logging()
+_log_file = configure_logging()
 
 logger = logging.getLogger(__name__)
 
 
 def pipeline():
     """Run the full ETL pipeline once."""
-    ctx = RunContext()
+    ctx = RunContext(log_file=str(_log_file))
     current_etag = None
     processed_path = None
 

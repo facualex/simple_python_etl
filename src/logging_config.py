@@ -7,7 +7,7 @@ from typing import Literal
 LogLevelName = Literal["CRITICAL", "ERROR", "WARNING", "INFO", "DEBUG"]
 
 
-def configure_logging(minimum_level: int | LogLevelName | None = None) -> None:
+def configure_logging(minimum_level: int | LogLevelName | None = None) -> Path:
     """Configure application logging once at startup.
 
     Keep this as a function (instead of module-level configuration) so importing
@@ -58,3 +58,5 @@ def configure_logging(minimum_level: int | LogLevelName | None = None) -> None:
 
     root_logger.addHandler(console_handler)
     root_logger.addHandler(file_handler)
+
+    return day_dir / log_filename

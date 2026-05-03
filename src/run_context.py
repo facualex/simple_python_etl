@@ -79,6 +79,7 @@ class RunContext:
     pickup_max: str | None = None
 
     git_sha: str | None = field(default_factory=_git_sha)
+    log_file: str | None = None
 
     def write_to_logs(self) -> None:
         """Serialize this RunContext to a JSON file under logs/YYYYMMDD/."""
@@ -86,8 +87,11 @@ class RunContext:
         logs_dir = project_root / "logs" / self.started_at.strftime("%Y%m%d")
         logs_dir.mkdir(parents=True, exist_ok=True)
 
-        timestamp = self.started_at.strftime("%Y%m%d%H%M%S") + self.started_at.strftime("%f")[:3]
-        output_path = logs_dir / f"run_summary_{timestamp}.json"
+        if self.log_file is not None:
+            stem = Path(self.log_file).stem
+        else:
+            stem = self.started_at.strftime("%Y%m%d%H%M%S") + self.started_at.strftime("%f")[:3]
+        output_path = logs_dir / f"run_summary_{stem}.json"
 
         with open(output_path, "w") as f:
             # default=str converts datetimes (and any other non-serializable types)
