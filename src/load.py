@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 def load(
     data: Tuple[pd.DataFrame, Path],
     destination: Path = Path("data/processed/"),
-) -> None:
+) -> Path:
     """Persist the transformed dataframe to the processed data directory.
 
     The output file name is derived from the original raw file name:
@@ -54,3 +54,5 @@ def load(
         load_path,
         load_path.stat().st_size / 1e6,
     )
+
+    return load_path

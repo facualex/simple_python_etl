@@ -32,13 +32,26 @@ def remove_invalid_durations(df: pd.DataFrame) -> pd.DataFrame:
     return df[df["tpep_dropoff_datetime"] > df["tpep_pickup_datetime"]]
 
 
-def clean_data(df: pd.DataFrame) -> pd.DataFrame:
-    """Apply basic data quality filters to the raw dataset."""
-    clean_df = remove_invalid_passengers(df)
-    clean_df = remove_invalid_distances(clean_df)
-    clean_df = remove_invalid_durations(clean_df)
+def clean_data(df: pd.DataFrame) -> Tuple[pd.DataFrame, dict[str, int]]:
+    """Apply basic data quality filters and return the cleaned df with per-rule drop counts."""
+    before = len(df)
 
-    return clean_df
+    df = remove_invalid_passengers(df)
+    after_passengers = len(df)
+
+    df = remove_invalid_distances(df)
+    after_distances = len(df)
+
+    df = remove_invalid_durations(df)
+    after_durations = len(df)
+
+    dropped = {
+        "invalid_passengers": before - after_passengers,
+        "invalid_distances": after_passengers - after_distances,
+        "invalid_durations": after_distances - after_durations,
+    }
+
+    return df, dropped
 
 
 def add_trip_duration(df: pd.DataFrame) -> pd.DataFrame:
@@ -73,7 +86,7 @@ def normalize_payment_type(df: pd.DataFrame) -> pd.DataFrame:
     return df
 
 
-def transform(data_path: Path) -> Tuple[pd.DataFrame, Path]:
+def transform(data_path: Path) -> Tuple[pd.DataFrame, Path, int, dict[str, int]]:
     """Read raw parquet, clean it, and add engineered features.
 
     Args:
@@ -91,6 +104,7 @@ def transform(data_path: Path) -> Tuple[pd.DataFrame, Path]:
 
     try:
         original_df = RAW_SCHEMA.validate(pd.read_parquet(data_path), lazy=True)
+        rows_in = len(original_df)
         logger.info("Schema validation succesful after reading source file.")
         logger.info("Data succesfully read.")
     except (errors.SchemaError, errors.SchemaErrors) as e:
@@ -99,7 +113,8 @@ def transform(data_path: Path) -> Tuple[pd.DataFrame, Path]:
         raise SchemaValidationFailed(summary) from None
 
     try:
-        clean_df = RAW_SCHEMA.validate(clean_data(original_df), lazy=True)
+        clean_df, dropped = clean_data(original_df)
+        clean_df = RAW_SCHEMA.validate(clean_df, lazy=True)
         logger.info("Schema validation succesful after cleaning.")
         logger.info("Data succesfully cleaned.")
     except (errors.SchemaError, errors.SchemaErrors) as e:
@@ -120,4 +135,4 @@ def transform(data_path: Path) -> Tuple[pd.DataFrame, Path]:
 
     logger.info(f"Data succesfully transformed: {data_path}")
 
-    return (transformed_df, data_path)
+    return (transformed_df, data_path, rows_in, dropped)

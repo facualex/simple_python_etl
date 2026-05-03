@@ -2,6 +2,7 @@ import logging
 import os
 from datetime import datetime
 from pathlib import Path
+from typing import Tuple
 
 import requests
 from dateutil.relativedelta import relativedelta
@@ -93,7 +94,7 @@ def extract(
     year: int | None = None,
     month: int | None = None,
     destination: Path = Path("data/raw/"),
-) -> Path:
+) -> Tuple[Path, str]:
     """Download the NYC Taxi parquet file and persist it locally.
 
     If `year` and `month` are not provided, the function probes the most recent
@@ -177,4 +178,4 @@ def extract(
         f"Filed saved: {output_path} ({output_path.stat().st_size / 1e6:.1f} MB)"
     )
 
-    return output_path
+    return (output_path, data_url)
