@@ -54,23 +54,34 @@ Real output from a completed run:
 
 The git SHA ties every output file to the exact version of the code that produced it — critical when the pipeline runs on a schedule.
 
-### 4. Robust extraction with bounded upstream probing
+### 4. ETag-based conditional execution
+The NYC TLC dataset files are not guaranteed immutable. The TLC has silently re-uploaded monthly files without notice. A simple "output file exists → skip" approach would miss re-publications and leave stale processed data.
+
+Before each run, the pipeline issues an HTTP `HEAD` request to fetch the remote file's `ETag` header without downloading it. This value is compared against the ETag stored from the previous run in `pipeline_state.json`:
+
+- **ETag matches + output file exists** → skip, log the reason, exit cleanly
+- **ETag differs** → re-download and reprocess (source was updated)
+- **No prior state** → process normally, then persist the ETag for future runs
+
+This approach detects source changes at near-zero cost and makes the pipeline safe to run on a schedule repeatedly without redundant work or stale outputs.
+
+### 5. Robust extraction with bounded upstream probing
 The NYC TLC dataset is published with a lag — the current month is often not yet available. Rather than hardcoding a date or failing immediately, `get_latest_data_url()` probes months backwards via HTTP `HEAD` (no download cost) until it finds a `200 OK`, bounded by a configurable threshold.
 
 Runs are fully deterministic without manual date updates. If the source is unavailable for longer than the threshold, the pipeline fails fast with a clear error.
 
-### 5. Memory-efficient streaming I/O
+### 6. Memory-efficient streaming I/O
 The source files are large (the March 2026 dataset has ~3.9M rows). The download uses `requests.get(..., stream=True)` with chunked writes — memory usage stays flat regardless of file size. Processed output is written as gzip-compressed Parquet.
 
-### 6. Separation of concerns and testability
-`extract`, `transform`, and `load` are independent modules with no knowledge of each other. `pipeline.py` is the only file that knows the full sequence. Each step can be tested, replaced, or extended in isolation.
+### 7. Separation of concerns and testability
+`extract`, `transform`, `load`, and `pipeline_state` are independent modules with no knowledge of each other. `pipeline.py` is the only file that knows the full sequence. Each step can be tested, replaced, or extended in isolation.
 
-27 tests cover URL construction, bounded retry logic, all cleaning rules, payment normalization, output path derivation, and schema acceptance/rejection — without mocking the entire pipeline.
+20 tests cover URL construction, bounded retry logic, all cleaning rules, payment normalization, output path derivation, and schema acceptance/rejection — without mocking the entire pipeline.
 
-### 7. Traceable artifact lineage
+### 8. Traceable artifact lineage
 Every output filename encodes its source: `prcsd_yellow_tripdata_2026-03.parquet.gzip` maps unambiguously to `yellow_tripdata_2026-03.parquet`. No metadata store required to answer "where did this file come from."
 
-### 8. Operational observability
+### 9. Operational observability
 Every run writes to both console and a timestamped log file under `logs/YYYYMMDD/`. Format includes module, function, and line number. Log level is configurable via environment variable. The run summary JSON and log file share the same date folder, so all artifacts from a single run are co-located.
 
 ---
@@ -83,6 +94,12 @@ Every run writes to both console and a timestamped log file under `logs/YYYYMMDD
             ▼
   pipeline.py ──────────────────────────────────────────────────────┐
        │                                                             │
+       │  ┌─ pipeline_state.py ───────────────────────────────┐     │
+       │  │  HEAD → fetch remote ETag                         │     │
+       │  │  load pipeline_state.json                         │     │
+       │  │  ETag match + output exists? → skip               │     │
+       │  └───────────────────────────────────────────────────┘     │
+       │           │ (no skip)                                       │
        │  ┌─ extract.py ──────────────────────────────────────┐     │
        │  │  HEAD probe (current month → backwards, max N)    │     │
        │  │  GET + chunked write                              │     │
@@ -103,6 +120,8 @@ Every run writes to both console and a timestamped log file under `logs/YYYYMMDD
        │  │  → data/processed/prcsd_<source_filename>.gzip    │     │
        │  └───────────────────────────────────────────────────┘     │
        │                                                             │
+       │  save_state(month_key, etag, processed_path)               │
+       │  → pipeline_state.json                                      │
        │                               ┌─ logging_config.py ────┐   │
        └───────────────────────────────┤  logs/YYYYMMDD/*.log   │   │
                                        ├─ run_context.py ───────┤   │
@@ -126,7 +145,7 @@ Every run writes to both console and a timestamped log file under `logs/YYYYMMDD
 | **Requests** | HTTP HEAD probing and streaming download |
 | **python-dateutil** | Month arithmetic for backwards probing |
 | **python-dotenv** | Environment-based configuration |
-| **pytest** | 27 tests across extract, transform, load, and schemas |
+| **pytest** | 20 tests across extract, transform, load, and schemas |
 
 Pinned versions in `requirements.txt`.
 
@@ -149,8 +168,10 @@ simple_python_etl/
 │   ├── test_transform.py     # Cleaning rules and payment normalization
 │   ├── test_load.py          # Output path and filename derivation
 │   └── test_schemas.py       # Schema acceptance and rejection cases
+├── pipeline_state.json       # Persisted ETag and output path per processed month
 └── src/
-    ├── pipeline.py           # Orchestration: extract → transform → load
+    ├── pipeline.py           # Orchestration: skip check → extract → transform → load
+    ├── pipeline_state.py     # ETag fetch, state read/write for conditional execution
     ├── extract.py            # URL resolution, bounded probe, streaming download
     ├── transform.py          # Data cleaning and feature engineering
     ├── load.py               # Persist processed dataframe to disk
@@ -181,7 +202,7 @@ BASE_URL=https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata
 python src/pipeline.py
 ```
 
-The pipeline resolves the latest available month automatically.
+The pipeline resolves the latest available month automatically. Re-running it will skip processing if the source file has not changed.
 
 ---
 
@@ -207,5 +228,4 @@ pytest
 ## Roadmap
 
 - CLI with `--year`, `--month`, `--latest` flags and proper exit codes for scheduler use
-- Skip extraction and processing if the output already exists for the target month
 - Automate via cron with failure alerting

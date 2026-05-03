@@ -1,5 +1,5 @@
 .env
-.state.json
+pipeline_state.json
 .venv
 logs/
 .DS_Store

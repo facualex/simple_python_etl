@@ -94,6 +94,7 @@ def extract(
     year: int | None = None,
     month: int | None = None,
     destination: Path = Path("data/raw/"),
+    url: str | None = None,
 ) -> Tuple[Path, str]:
     """Download the NYC Taxi parquet file and persist it locally.
 
@@ -125,7 +126,9 @@ def extract(
         OSError: For filesystem-related failures (permissions, disk full, etc.).
     """
     try:
-        if year is None or month is None:
+        if url is not None:
+            data_url = url
+        elif year is None or month is None:
             data_url = get_latest_data_url()
         else:
             data_url = build_url(year, month)
