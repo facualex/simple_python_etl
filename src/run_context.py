@@ -86,7 +86,8 @@ class RunContext:
         logs_dir = project_root / "logs" / self.started_at.strftime("%Y%m%d")
         logs_dir.mkdir(parents=True, exist_ok=True)
 
-        output_path = logs_dir / f"run_summary_{self.run_id}.json"
+        timestamp = self.started_at.strftime("%Y%m%d%H%M%S") + self.started_at.strftime("%f")[:3]
+        output_path = logs_dir / f"run_summary_{timestamp}.json"
 
         with open(output_path, "w") as f:
             # default=str converts datetimes (and any other non-serializable types)
